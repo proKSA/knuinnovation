@@ -13,7 +13,7 @@ import android.content.Intent;
 
 public class KNUAttendanceChecker extends Application implements BootstrapNotifier {
 	
-	public static final String TAG = ".KNUAttendanceChecker";
+	public static final String TAG = "KNUAttendanceChecker";
 	
 	@SuppressWarnings("unused")
 	private BackgroundPowerSaver mBackgroundPowerSaver;

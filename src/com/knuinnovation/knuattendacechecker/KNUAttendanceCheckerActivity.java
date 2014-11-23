@@ -7,6 +7,8 @@ import android.view.MenuItem;
 
 
 public class KNUAttendanceCheckerActivity extends Activity {
+	
+	public static final String TAG = "KNUAttendanceCheckerActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
