@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">KNU Attendace Checker</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="location_service_start">Start LocationService</string>
+    <string name="location_service_stop">Stop LocationService</string>
 
 </resources>
