@@ -6,9 +6,8 @@ import android.content.Intent;
 
 public class LocationService extends IntentService {
 
-	public LocationService(String name) {
-		super(name);
-		// TODO Do we really need this?
+	public LocationService() {
+		super("LocationService");
 	}
 
 	@Override

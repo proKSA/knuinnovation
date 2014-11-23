@@ -8,22 +8,4 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.knuinnovation.knuattendacechecker.KNUAttendanceCheckerActivity" >
 
-    <Button
-        android:id="@+id/button_LocationService_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="28dp"
-        android:text="@string/location_service_stop" />
-
-    <Button
-        android:id="@+id/button_LocationService_start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/button_LocationService_stop"
-        android:layout_alignLeft="@+id/button_LocationService_stop"
-        android:layout_marginBottom="17dp"
-        android:text="@string/location_service_start" />
-
 </RelativeLayout>
