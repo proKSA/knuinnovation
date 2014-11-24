@@ -1,6 +1,10 @@
 package com.knuinnovation.knuattendacechecker;
 
 
+import java.util.ArrayList;
+
+import org.altbeacon.beacon.Beacon;
+
 import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
@@ -17,5 +21,18 @@ public class LocationService extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		// TODO Auto-generated method stub
 		Log.v(TAG, "service called");
+		
+		ArrayList<Beacon> rangingResult = new ArrayList<Beacon>();
+		
+		rangingResult = intent.getParcelableArrayListExtra("rangingResult");
+		
+		
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		
+		Log.v(TAG, "location service done");
 	}
 }
