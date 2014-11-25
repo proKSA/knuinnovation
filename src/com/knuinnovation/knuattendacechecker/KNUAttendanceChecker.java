@@ -16,24 +16,57 @@ import org.altbeacon.beacon.startup.RegionBootstrap;
 import android.app.Application;
 import android.content.Intent;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.util.Log;
 
+/**
+ * Main application class of the attendance checker application.
+ * The interface BootstrapNotifier provides background beacon monitoring, and the
+ * RangeNotifier interface enables the class to receive ranging information.
+ * 
+ * @author Gábor Proksa
+ *
+ */
 public class KNUAttendanceChecker extends Application implements BootstrapNotifier, RangeNotifier {
-	
 	public static final String TAG = "KNUAttendanceChecker";
 	
+	/**
+	 * Region definition that matches all KNU Beacons (proximity id: 24ddf411-8cf1-440c-87cd-e368daf9c93e)
+	 * Necessary to only awaken application when KNU Beacons are in range.
+	 */
 	private Region mAllKnuBeaconsRegion;
+	
+	/**
+	 * Holding this reference enables battery saving.
+	 * (see android beacon library documentation)
+	 */
 	private BackgroundPowerSaver mBackgroundPowerSaver;
+	
+	/**
+	 * This <code>BeaconCache</code> instance will keep track of the detected beacons.
+	 * Caching is necessary because sometimes not all beacons in range are detected, and we need at least 3 beacons
+	 * to trilaterate our position.
+	 */
 	private BeaconCache mBeaconCache;
+	
+	/**
+	 * The BeaconManager instance of the application
+	 */
 	private BeaconManager mBeaconManager;
+	
+	/**
+	 * The RegionBootsrap instance of the application
+	 */
 	private RegionBootstrap mRegionBootstrap;
 
+	/**
+	 * This method initializes the beacon monitoring and ranging. After call, beacons will be
+	 * detected even when the application is in the background or terminated.
+	 */
 	@Override
 	public void onCreate() {
 		super.onCreate();
 		
-		// Creating this class and holding a reference enables battery saving (see android beacon library documentation)
+		// Enabling battery saving
 		mBackgroundPowerSaver = new BackgroundPowerSaver(this);
 		
 		// Enabling the detection of RECO iBeacons
@@ -59,6 +92,10 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		
 	}
 
+	/**
+	 * This callback is called when the first KNU beacon is detected, we start
+	 * ranging then.
+	 */
 	@Override
 	public void didEnterRegion(Region arg0) {
 		
@@ -74,6 +111,10 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		}
 	}
 
+	/**
+	 * This callback is called when the last KNU beacon gets out of range, ranging is stopped to save
+	 * battery.
+	 */
 	@Override
 	public void didExitRegion(Region arg0) {
 		
@@ -89,16 +130,22 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		}
 	}
 
+	/**
+	 * This method is called every second while ranging is active, returning a collection with the
+	 * results of the ranging. These results are put in the beacon cache.
+	 * 
+	 * After caching if at least 3 beacons are present, we invoke the <code>LocationService</code>
+	 */
 	@Override
 	public void didRangeBeaconsInRegion(Collection<Beacon> arg0, Region arg1) {
 		
 		Log.v(TAG, "Ranging result recieved");
 		
-		// Get the ranging result, timestamp it, and put it in the cache
+		// Get the ranging result and put it in the cache
 		ArrayList<Beacon> rangingResult = new ArrayList<Beacon>(arg0);
 
 		for (Beacon beacon : rangingResult) {
-			DetectedBeacon dBeacon = new DetectedBeacon(beacon, SystemClock.elapsedRealtime());
+			DetectedBeacon dBeacon = new DetectedBeacon(beacon);
 			mBeaconCache.cache(dBeacon);
 		}
 		

@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.util.Log;
 
 public class LocationService extends IntentService {
-	
 	public static final String TAG = "LocationService";
 
 	public LocationService() {
