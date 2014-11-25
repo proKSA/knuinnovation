@@ -22,9 +22,8 @@ public class LocationService extends IntentService {
 		// TODO Auto-generated method stub
 		Log.v(TAG, "service called");
 		
-		ArrayList<Beacon> rangingResult = new ArrayList<Beacon>();
-		
-		rangingResult = intent.getParcelableArrayListExtra("rangingResult");
+		ArrayList<Beacon> visibleBeacons = new ArrayList<Beacon>();
+		visibleBeacons = intent.getParcelableArrayListExtra("visibleBeacons");
 		
 		
 	}

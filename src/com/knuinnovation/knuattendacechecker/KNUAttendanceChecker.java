@@ -16,18 +16,18 @@ import org.altbeacon.beacon.startup.RegionBootstrap;
 import android.app.Application;
 import android.content.Intent;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class KNUAttendanceChecker extends Application implements BootstrapNotifier, RangeNotifier {
 	
 	public static final String TAG = "KNUAttendanceChecker";
 	
-	@SuppressWarnings("unused")
-	private BackgroundPowerSaver mBackgroundPowerSaver;
-	private BeaconManager mBeaconManager;
-	@SuppressWarnings("unused")
-	private RegionBootstrap mRegionBootstrap;
 	private Region mAllKnuBeaconsRegion;
+	private BackgroundPowerSaver mBackgroundPowerSaver;
+	private BeaconCache mBeaconCache;
+	private BeaconManager mBeaconManager;
+	private RegionBootstrap mRegionBootstrap;
 
 	@Override
 	public void onCreate() {
@@ -46,6 +46,9 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		
 		// Set this class to receive Ranging information
 		mBeaconManager.setRangeNotifier(this);
+		
+		// Cache the detected beacons
+		mBeaconCache = new BeaconCache();
 		
 		Log.v(TAG, "Started background monitoring");
 	}
@@ -91,13 +94,24 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		
 		Log.v(TAG, "Ranging result recieved");
 		
+		// Get the ranging result, timestamp it, and put it in the cache
 		ArrayList<Beacon> rangingResult = new ArrayList<Beacon>(arg0);
+
+		for (Beacon beacon : rangingResult) {
+			DetectedBeacon dBeacon = new DetectedBeacon(beacon, SystemClock.elapsedRealtime());
+			mBeaconCache.cache(dBeacon);
+		}
 		
-		Intent serviceIntent = new Intent(this, LocationService.class);
-		serviceIntent.putParcelableArrayListExtra("rangingResult", rangingResult);
-		this.startService(serviceIntent);
+		// Invoke the location service if there are at least 3 beacons visible
+		if (mBeaconCache.getNumberOfBeacons() >= 3) {
+			
+		    Intent serviceIntent = new Intent(this, LocationService.class);
+		    serviceIntent.putParcelableArrayListExtra("visibleBeacons", mBeaconCache.getCachedBeacons());
+		    this.startService(serviceIntent);
 		    
-		Log.v(TAG, "Starting location service");
+		    Log.v(TAG, "Starting location service");
+		}
+		    
 	}
 
 	@Override
