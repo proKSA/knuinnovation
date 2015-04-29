@@ -10,6 +10,13 @@ import android.util.Log;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
+/**
+ * This static class is responsible for trilateration
+ * For operation it requires the weka android libary (weka-3.6.6-android.jar) for the use of a K-Means clusterer
+ * 
+ * @author Gábor Proksa
+ *
+ */
 public class Trilaterator {
 	public static final String TAG = "Trilaterator";
 
@@ -87,7 +94,6 @@ public class Trilaterator {
 		}
 		
 		String s = sb.toString();
-		//System.out.println(s);
 		StringReader sr = new StringReader(s);
 		BufferedReader br = new BufferedReader(sr);
 		
@@ -96,7 +102,6 @@ public class Trilaterator {
 			kmeans.buildClusterer(inst);
 			
 			Instances clusterCentroids = kmeans.getClusterCentroids();
-			//double[] clusterSizes = kmeans.getClusterSizes();
 			int[] clusterSizes = kmeans.getClusterSizes();
 			
 			double max = clusterSizes[0];
@@ -108,8 +113,6 @@ public class Trilaterator {
 				}
 			}
 			
-			
-			//Point position = new Point(clusterCentroids.get(maxindex).value(0), clusterCentroids.get(maxindex).value(1));
 			Point position = new Point(clusterCentroids.instance(maxindex).value(0), clusterCentroids.instance(maxindex).value(1));
 			
 			Log.v(TAG, "Trilateration finihed\n Position: " + position.toString());

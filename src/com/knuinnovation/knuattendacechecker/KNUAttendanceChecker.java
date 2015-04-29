@@ -60,12 +60,24 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 	 */
 	private RegionBootstrap mRegionBootstrap;
 	
+	/**
+	 * Time interval the UI update intent is sent and the beacon cache is refreshed, in miliseconds
+	 */
 	private int mInterval = 1000;
+	
+	/**
+	 * Handler needed for the postDelayed function to periodically call the UI updater function
+	 */
 	private Handler mHandler;
 	
+	/**
+	 * This method is used to periodically call the UI updater function
+	 */
 	Runnable mBeaconChecker = new Runnable() {
 		public void run() {
+			// This call will refresh the Beacon cache and send an update intent to the main application with the new data
 			updateUI();
+			// This run method will be called again after mInterval miliseconds
 			mHandler.postDelayed(mBeaconChecker, mInterval);
 		}
 	};
@@ -130,8 +142,7 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 			Log.v(TAG, "Starting ranging");
 			mBeaconManager.startRangingBeaconsInRegion(mAllKnuBeaconsRegion);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(TAG, "Beacon ranging failed to start");
 		}
 	}
 
@@ -149,8 +160,7 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 			Log.v(TAG, "Stopping ranging");
 			mBeaconManager.stopRangingBeaconsInRegion(mAllKnuBeaconsRegion);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(TAG, "Beacon ranging failed to stop");
 		}
 	}
 
@@ -172,12 +182,11 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 			DetectedBeacon dBeacon = new DetectedBeacon(beacon);
 			mBeaconCache.cache(dBeacon);
 			
-			//Log.v("beacon." + beacon.getId3().toString(), Integer.toString(beacon.getRssi()) + ": " + Double.toString(beacon.getDistance()));
 			Log.v("beacon." + beacon.getId3().toString(), Integer.toString(beacon.getRssi()) + ": " + Double.toString(beacon.getDistance()) + ": " + Integer.toString(beacon.getTxPower()));
 			
 		}
 		
-		// update UI
+		// Refresh the cache and notify the UI of the changes
 		updateUI();
 		
 		// Invoke the location service if there are at least 3 beacons visible
@@ -190,11 +199,17 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		    Log.v(TAG, "Starting location service");
 		}
 		else {
+			// There are not enough beacons in the cache to start trilateration, so we set the position to unknown and the location to outside
 			resetUI();
 		}
 		    
 	}
 	
+	/**
+	 * This method resets the UI's position and location fields.
+	 * The position will be shown as unknown and the location as outside. The Activity when recieving the broadcast,
+	 * will interpret the position (-1.0, -1.0) as an invalid position, and will display "Unknown".
+	 */
 	public void resetUI() {
 		Intent localIntent = new Intent(LocationService.BROADCAST_ACTION);
 		localIntent.putExtra(LocationService.POSITION_X, -1.0);
@@ -205,13 +220,21 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		
 		Log.v(TAG, "UI reset intent sent: (-1.0, -1.0), false");
 	}
+	
+	/**
+	 * This method refreshes the beacon cache, and then sends the fresh data to the 
+	 * main activity by a broadcast intent.
+	 * 
+	 */
 	public void updateUI() {
-		// Update UI with fresh beacon data
 
+		// Refresh beacon cache
 		mBeaconCache.pruneCache();
 
 		Intent localIntent = new Intent(LocationService.BROADCAST_BEACON_ACTION);
 
+		// Make sure that we update the correct text field for each beacon
+		// distinction is based on the minor identifier (set to 0, 1, 2, respectively)
 		for (Beacon b : mBeaconCache.getCachedBeacons()) {
 			switch (b.getId3().toInt()) {
 
@@ -232,6 +255,9 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		Log.v(TAG, "Beacon information update intent sent");
 	}
 
+	/**
+	 * When the application terminates, we unregister the periodic callback
+	 */
 	@Override
 	public void onTerminate() {
 		super.onTerminate();

@@ -112,6 +112,12 @@ public class BeaconCache {
 		}
 	}
 	
+	/**
+	 * This is a simple getter method to get the maximum time a beacon is stored in the cache.
+	 * The intention of this was to implement a countdown timer on the main activity screen for beacons
+	 * 
+	 * @return The maximum time a beacon is in the cache in seconds
+	 */
 	public static int getMaxUndetectedTime() {
 		return mMaxUndetectedSeconds * 1000;
 	}
