@@ -3,5 +3,14 @@
 
     <string name="app_name">KNU Attendace Checker</string>
     <string name="action_settings">Settings</string>
+    <string name="pos_label">Position:</string>
+    <string name="valid_label">Location:</string>
+    <string name="beacon0">Beacon 0:</string>
+    <string name="becon1">Beacon 1:</string>
+    <string name="beacon2">Beacon 2:</string>
+    <string name="unknown">Unknown</string>
+    <string name="dist_label">Distance</string>
+    <string name="outofrange">Out of range</string>
+    <string name="inrange">In range</string>
 
 </resources>

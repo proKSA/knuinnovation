@@ -15,7 +15,9 @@ import org.altbeacon.beacon.startup.RegionBootstrap;
 
 import android.app.Application;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.RemoteException;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
@@ -57,6 +59,16 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 	 * The RegionBootsrap instance of the application
 	 */
 	private RegionBootstrap mRegionBootstrap;
+	
+	private int mInterval = 1000;
+	private Handler mHandler;
+	
+	Runnable mBeaconChecker = new Runnable() {
+		public void run() {
+			updateUI();
+			mHandler.postDelayed(mBeaconChecker, mInterval);
+		}
+	};
 
 	/**
 	 * This method initializes the beacon monitoring and ranging. After call, beacons will be
@@ -81,7 +93,14 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		mBeaconManager.setRangeNotifier(this);
 		
 		// Cache the detected beacons
-		mBeaconCache = new BeaconCache();
+		mBeaconCache = new BeaconCache(60);
+		
+		// Reset the User interface
+		resetUI();
+		
+		// Periodic update
+		mHandler = new Handler();
+		mBeaconChecker.run();
 		
 		Log.v(TAG, "Started background monitoring");
 	}
@@ -100,6 +119,11 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 	public void didEnterRegion(Region arg0) {
 		
 		Log.v(TAG, "Entered KNU beacon region");
+		
+		// Launch activity
+		Intent intent = new Intent(this, KNUAttendanceCheckerActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		this.startActivity(intent);
 		
 		// Start ranging
 		try {
@@ -147,7 +171,14 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		for (Beacon beacon : rangingResult) {
 			DetectedBeacon dBeacon = new DetectedBeacon(beacon);
 			mBeaconCache.cache(dBeacon);
+			
+			//Log.v("beacon." + beacon.getId3().toString(), Integer.toString(beacon.getRssi()) + ": " + Double.toString(beacon.getDistance()));
+			Log.v("beacon." + beacon.getId3().toString(), Integer.toString(beacon.getRssi()) + ": " + Double.toString(beacon.getDistance()) + ": " + Integer.toString(beacon.getTxPower()));
+			
 		}
+		
+		// update UI
+		updateUI();
 		
 		// Invoke the location service if there are at least 3 beacons visible
 		if (mBeaconCache.getNumberOfBeacons() >= 3) {
@@ -158,12 +189,55 @@ public class KNUAttendanceChecker extends Application implements BootstrapNotifi
 		    
 		    Log.v(TAG, "Starting location service");
 		}
+		else {
+			resetUI();
+		}
 		    
+	}
+	
+	public void resetUI() {
+		Intent localIntent = new Intent(LocationService.BROADCAST_ACTION);
+		localIntent.putExtra(LocationService.POSITION_X, -1.0);
+		localIntent.putExtra(LocationService.POSITION_Y, -1.0);
+		localIntent.putExtra(LocationService.POSITION_VALID, false);
+		
+		LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+		
+		Log.v(TAG, "UI reset intent sent: (-1.0, -1.0), false");
+	}
+	public void updateUI() {
+		// Update UI with fresh beacon data
+
+		mBeaconCache.pruneCache();
+
+		Intent localIntent = new Intent(LocationService.BROADCAST_BEACON_ACTION);
+
+		for (Beacon b : mBeaconCache.getCachedBeacons()) {
+			switch (b.getId3().toInt()) {
+
+			case 0:
+				localIntent.putExtra(LocationService.BEACON0_RANGE, b.getDistance());
+				break;
+			case 1:
+				localIntent.putExtra(LocationService.BEACON1_RANGE, b.getDistance());
+				break;
+			case 2:
+				localIntent.putExtra(LocationService.BEACON2_RANGE, b.getDistance());
+				break;
+			}
+		}
+
+
+		LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+		Log.v(TAG, "Beacon information update intent sent");
 	}
 
 	@Override
 	public void onTerminate() {
 		super.onTerminate();
+		
+		// stop periodic update
+		mHandler.removeCallbacks(mBeaconChecker);
 		
 		Log.v(TAG, "Application terminating");
 	}

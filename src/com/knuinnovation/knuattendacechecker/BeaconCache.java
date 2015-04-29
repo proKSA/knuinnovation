@@ -1,6 +1,7 @@
 package com.knuinnovation.knuattendacechecker;
 
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.altbeacon.beacon.Beacon;
 
@@ -19,13 +20,13 @@ public class BeaconCache {
 	 * The currently cached beacons are wrapped in the <code>DetectedBeacon</code> class
 	 * and stored in this ArrayList.
 	 */
-	private ArrayList<DetectedBeacon> mCachedBeacons;
+	private CopyOnWriteArrayList<DetectedBeacon> mCachedBeacons;
 	
 	/**
 	 * The number of seconds a beacon has to be undetected for it to get removed
 	 * from the cache.
 	 */
-	private int mMaxUndetectedSeconds;
+	private static int mMaxUndetectedSeconds;
 	
 	/**
 	 * Basic constructor
@@ -34,7 +35,7 @@ public class BeaconCache {
 	 * being undetected.
 	 */
 	public BeaconCache() {
-		mCachedBeacons = new ArrayList<DetectedBeacon>();
+		mCachedBeacons = new CopyOnWriteArrayList<DetectedBeacon>();
 		mMaxUndetectedSeconds = 10;
 	}
 	
@@ -45,7 +46,7 @@ public class BeaconCache {
 	 * beacon gets removed
 	 */
 	public BeaconCache(int maxUndetectedSeconds) {
-		mCachedBeacons = new ArrayList<DetectedBeacon>();
+		mCachedBeacons = new CopyOnWriteArrayList<DetectedBeacon>();
 		mMaxUndetectedSeconds = maxUndetectedSeconds;
 	}
 	
@@ -101,13 +102,17 @@ public class BeaconCache {
 	 * This time can be given in seconds when constructing the class, otherwise the default value
 	 * of 10 seconds will be used.
 	 */
-	private void pruneCache() {
+	public void pruneCache() {
 		long pruneTime = SystemClock.elapsedRealtime();
-		
+
 		for (DetectedBeacon element : mCachedBeacons) {
-			if ((element.getDetectTime() - pruneTime) > (mMaxUndetectedSeconds * 1000)) {
+			if ((pruneTime - element.getDetectTime()) > (mMaxUndetectedSeconds * 1000)) {
 				mCachedBeacons.remove(element);
 			}
 		}
+	}
+	
+	public static int getMaxUndetectedTime() {
+		return mMaxUndetectedSeconds * 1000;
 	}
 }
